@@ -12,4 +12,6 @@ router.route('/login').post(validateInputs(loginSchema), authController.loginUse
 
 router.route('/refresh').post(authController.rotateTokens);
 
+router.route('/logout').post(authController.logoutUser);
+
 export default router;

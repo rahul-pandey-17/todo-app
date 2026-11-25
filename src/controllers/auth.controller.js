@@ -164,3 +164,24 @@ export const rotateTokens = asyncHandler(async (req, res) => {
     message: 'Tokens rotated successfully',
   });
 });
+
+export const logoutUser = asyncHandler(async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+
+  if (refreshToken) {
+    try {
+      const decoded = jwt.verify(refreshToken, env.REFRESH_TOKEN_SECRET);
+      await User.findByIdAndUpdate(decoded.id, {
+        $unset: { refreshToken: '' },
+      });
+    } catch (err) {
+      console.warn('Ignoring invalid refresh token on logout:', err.message);
+    }
+  }
+
+  res.clearCookie('accessToken', COOKIE_OPTIONS).clearCookie('refreshToken', COOKIE_OPTIONS);
+
+  return apiResponse(res, {
+    message: 'User logged out',
+  });
+});
