@@ -22,9 +22,11 @@ app.use(
 
 // route imports
 import authRoutes from './routes/auth.route.js';
+import todoRoutes from './routes/todo.route.js';
 
 // routes
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/todo', todoRoutes);
 
 // global error handling
 app.use(globalErrorHandler);
