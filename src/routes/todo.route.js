@@ -13,4 +13,6 @@ router
 
 router.route('/').get(authenticateUser, todoController.getTodos);
 
+router.route('/:id').get(authenticateUser, todoController.getTodo);
+
 export default router;
