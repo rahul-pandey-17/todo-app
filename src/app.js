@@ -21,8 +21,10 @@ app.use(
 );
 
 // route imports
+import authRoutes from './routes/auth.route.js';
 
 // routes
+app.use('/api/v1/auth', authRoutes);
 
 // global error handling
 app.use(globalErrorHandler);
