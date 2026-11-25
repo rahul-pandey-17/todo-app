@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import helmet from 'helmet';
 
 import env from './config/env.js';
+import globalErrorHandler from './middlewares/error.middleware.js';
 
 const app = express();
 
@@ -24,5 +25,6 @@ app.use(
 // routes
 
 // global error handling
+app.use(globalErrorHandler);
 
 export default app;
