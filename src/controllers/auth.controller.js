@@ -1,5 +1,6 @@
 import { mongo } from 'mongoose';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 import User from '../models/user.model.js';
 import ApiError from '../utils/error.js';
@@ -85,5 +86,81 @@ export const loginUser = asyncHandler(async (req, res) => {
       name: user.fullName,
       email: user.email,
     },
+  });
+});
+
+export const rotateTokens = asyncHandler(async (req, res) => {
+  const incomingRefreshToken = req.cookies.refreshToken;
+
+  if (!incomingRefreshToken) {
+    throw new ApiError({
+      statusCode: 401,
+      message: 'Unauthorized',
+      internalMessage: 'Refresh token is missing from cookie',
+    });
+  }
+
+  let decoded;
+
+  try {
+    decoded = jwt.verify(incomingRefreshToken, env.REFRESH_TOKEN_SECRET);
+  } catch (err) {
+    throw new ApiError({
+      statusCode: 401,
+      message: 'Unauthorized',
+      internalMessage: 'Refresh token verification failed',
+    });
+  }
+
+  const user = await User.findById(decoded.id);
+
+  if (!user) {
+    throw new ApiError({
+      statusCode: 401,
+      message: 'Unauthorized',
+      internalMessage: 'User not found',
+    });
+  }
+
+  if (!user.refreshToken) {
+    throw new ApiError({
+      statusCode: 401,
+      message: 'Unauthorized',
+      internalMessage: 'User does not have a refresh token stored in database',
+    });
+  }
+
+  const doesTokenMatch = await bcrypt.compare(incomingRefreshToken, user.refreshToken);
+
+  if (!doesTokenMatch) {
+    user.refreshToken = undefined;
+    await user.save();
+
+    throw new ApiError({
+      statusCode: 401,
+      message: 'Unauthorized',
+      internalMessage: 'Incoming refresh token does not match with the token stored in database',
+    });
+  }
+
+  const { accessToken, refreshToken } = generateAccessAndRefreshTokens(user);
+
+  const hashedRefreshToken = await bcrypt.hash(refreshToken, 12);
+
+  user.refreshToken = hashedRefreshToken;
+  await user.save();
+
+  res
+    .cookie('accessToken', accessToken, {
+      ...COOKIE_OPTIONS,
+      maxAge: env.ACCESS_TOKEN_EXPIRY,
+    })
+    .cookie('refreshToken', refreshToken, {
+      ...COOKIE_OPTIONS,
+      maxAge: env.REFRESH_TOKEN_EXPIRY,
+    });
+
+  return apiResponse(res, {
+    message: 'Tokens rotated successfully',
   });
 });

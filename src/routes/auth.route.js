@@ -10,4 +10,6 @@ router.route('/signup').post(validateInputs(signupSchema), authController.signup
 
 router.route('/login').post(validateInputs(loginSchema), authController.loginUser);
 
+router.route('/refresh').post(authController.rotateTokens);
+
 export default router;
