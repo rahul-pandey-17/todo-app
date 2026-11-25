@@ -55,3 +55,44 @@ export const getTodo = asyncHandler(async (req, res) => {
     data: todo,
   });
 });
+
+export const updateTodo = asyncHandler(async (req, res) => {
+  const { title, description } = req.validatedBody;
+  const todoId = isValidId(req.params.id);
+
+  const updates = {};
+
+  if (title !== undefined) {
+    updates.title = title;
+  }
+
+  if (description !== undefined) {
+    updates.description = description;
+  }
+
+  const updatedTodo = await Todo.findOneAndUpdate(
+    {
+      _id: todoId,
+      userId: req.user.id,
+    },
+    {
+      $set: updates,
+    },
+    {
+      returnDocument: 'after',
+      runValidators: true,
+    }
+  );
+
+  if (!updatedTodo) {
+    throw new ApiError({
+      statusCode: 404,
+      message: 'Todo not found',
+    });
+  }
+
+  return apiResponse(res, {
+    message: 'Todo updated successfully',
+    data: updatedTodo,
+  });
+});
