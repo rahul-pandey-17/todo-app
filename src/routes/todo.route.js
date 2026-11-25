@@ -11,4 +11,6 @@ router
   .route('/')
   .post(authenticateUser, validateInputs(createTodoSchema), todoController.createTodo);
 
+router.route('/').get(authenticateUser, todoController.getTodos);
+
 export default router;
