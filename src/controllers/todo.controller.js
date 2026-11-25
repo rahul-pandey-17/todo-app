@@ -96,3 +96,24 @@ export const updateTodo = asyncHandler(async (req, res) => {
     data: updatedTodo,
   });
 });
+
+export const deleteTodo = asyncHandler(async (req, res) => {
+  const todoId = isValidId(req.params.id);
+
+  const deletedTodo = await Todo.findOneAndDelete({
+    _id: todoId,
+    userId: req.user.id,
+  });
+
+  if (!deletedTodo) {
+    throw new ApiError({
+      statusCode: 404,
+      message: 'Todo not found',
+    });
+  }
+
+  return apiResponse(res, {
+    message: 'Todo deleted successfully',
+    data: deletedTodo,
+  });
+});
